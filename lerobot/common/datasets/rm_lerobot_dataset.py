@@ -15,7 +15,6 @@ class FrameGapLeRobotDataset(LeRobotDataset):
         episodes: list[int] | None = None,
         n_obs_steps: int = 1,
         frame_gap: int = 1,
-        horizon: int = 1,
         max_rewind_steps: int = 0,
         root: str | Path | None = None,
         image_transforms: Callable | None = None,
@@ -45,7 +44,6 @@ class FrameGapLeRobotDataset(LeRobotDataset):
 
         self.n_obs_steps = n_obs_steps
         self.frame_gap = frame_gap
-        self.horizon = horizon
         self.max_rewind_steps = max_rewind_steps
         self.timestamp_tensor = torch.tensor(self.hf_dataset["timestamp"]).flatten()
         assert all(img_name in self.meta.video_keys for img_name in image_names), f"Image names {image_names} not found in metadata video keys."

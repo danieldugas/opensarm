@@ -47,7 +47,6 @@ class ReWiNDWorkspace:
         train_eps, val_eps = split_train_eval_episodes(valid_episodes, 1 - cfg.train.val_portion, seed=cfg.general.seed)
 
         dataset_train = FrameGapLeRobotDataset(repo_id=cfg.general.repo_id, 
-                                               horizon=cfg.model.horizon, 
                                                episodes=train_eps, 
                                                n_obs_steps=cfg.model.n_obs_steps, 
                                                frame_gap=cfg.model.frame_gap,
@@ -56,7 +55,6 @@ class ReWiNDWorkspace:
                                                annotation_list=cfg.model.annotation_list)
 
         dataset_val = FrameGapLeRobotDataset(repo_id=cfg.general.repo_id, 
-                                               horizon=cfg.model.horizon, 
                                                episodes=val_eps, 
                                                n_obs_steps=cfg.model.n_obs_steps, 
                                                frame_gap=cfg.model.frame_gap,
@@ -233,7 +231,6 @@ class ReWiNDWorkspace:
         valid_episodes = get_valid_episodes(repo_id)
         train_eps, val_eps = split_train_eval_episodes(valid_episodes, 1 - cfg.train.val_portion, seed=cfg.general.seed)
         dataset_val = FrameGapLeRobotDataset(repo_id=repo_id, 
-                                               horizon=cfg.model.horizon, 
                                                episodes=val_eps, 
                                                n_obs_steps=cfg.model.n_obs_steps, 
                                                frame_gap=cfg.model.frame_gap,
