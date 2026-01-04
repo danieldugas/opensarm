@@ -5,7 +5,7 @@ cfg:
     # dataset specific
     project_name: "reward_rewind"
     task_name: "fold_tshirt"
-    repo_id: PATH_TO_YOUR/LEROBOT_DATASET  # path to the huggingface lerobot dataset: USR_NAME/DATASET
+    repo_id: PATH_TO_YOUR/LEROBOT_DATASET    # path to the huggingface lerobot dataset: USR_NAME/DATASET
     state_norm_path: PATH_TO_YOUR/NORM_STATS # path to the task specific norm stats file, example can be found at "assets/fold_tshirt.json"
     camera_names:  [top_camera-images-rgb]
     seed: 42
@@ -26,7 +26,7 @@ cfg:
     persistent_workers: True
 
   rollout_dataloader:
-    batch_size: 1 # don't change
+    batch_size: 1
     num_workers: 6
     shuffle: True
     pin_memory: True
@@ -77,11 +77,14 @@ cfg:
     val_portion: 0.1     # fraction of episodes for validation
 
   eval:
-    run_times: 70  # number of episodes to evaluate in video
-    raw_data_run_times: 36
     eval_frame_gap: 10
+
     ckpt_path: "PATH/TO/YOUR/CHECKPOINT"  # path to the folder containing reward_best.pt
     reward_model_name: "NAME_OF_REWARD_MODEL"  # name of the reward model, e.g. reward_best.pt
-    raw_data_dir: "PATH/TO/YOUR/RAW/DATA"  # path to the folder containing raw robot trajectories for evaluation
 
+    run_times: 60  
+    
+    # Raw data evaluation
+    raw_data_dir: "PATH/TO/YOUR/RAW/DATA"  # path to the folder containing raw robot trajectories for evaluation
+    raw_data_run_times: 60
     
