@@ -105,7 +105,7 @@ class SubtaskTransformer(nn.Module):
         
         # Transformer encoder with padding mask
         h = self.transformer(x_tokens, 
-                             causal_mask=causal_mask,
+                             mask=causal_mask,
                              src_key_padding_mask=mask,
                              is_causal=True)  # (B, (N+3)*T, D)         # (B,(N+3)*T,D)
         h = h.view(B, N + 3, T, D)

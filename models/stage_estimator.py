@@ -94,7 +94,7 @@ class StageTransformer(nn.Module):
 
         # Encode
         h = self.transformer(x_tokens, 
-                             causal_mask=causal_mask,
+                             mask=causal_mask,
                              src_key_padding_mask=mask,
                              is_causal=True)  # (B, (N+2)*T, D)
         h = h.view(B, N + 2, T, D).permute(0, 2, 1, 3).reshape(B, T, (N + 2) * D)

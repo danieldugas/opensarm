@@ -83,7 +83,7 @@ class RewardTransformer(nn.Module):
 
         # Reshape to (B, N, T+1, d_model)
         h = self.transformer(x_tokens, 
-                             causal_mask=causal_mask,
+                             mask=causal_mask,
                              src_key_padding_mask=mask,
                              is_causal=True)  # (B, (N+2)*T, D)
         flatterned_h = h.view(B, T, -1)  # (B, T, (N+2)*d_model)
