@@ -3,7 +3,7 @@ from pathlib import Path
 import torch
 import matplotlib.pyplot as plt
 from pathlib import Path
-from normalizer import SingleFieldLinearNormalizer
+from utils.normalizer import SingleFieldLinearNormalizer
 import json
 import numpy as np
 

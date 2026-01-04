@@ -1,23 +1,27 @@
+import os
+import numpy as np
 from pathlib import Path
 from omegaconf import OmegaConf
 from datetime import datetime
+
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim.lr_scheduler import SequentialLR, LinearLR, CosineAnnealingLR
+
 from tqdm import tqdm
 import wandb
+
 from lerobot.common.datasets.rm_lerobot_dataset import FrameGapLeRobotDataset 
-from data_utils import get_valid_episodes, split_train_eval_episodes, adapt_lerobot_batch_sarm
-from train_utils import set_seed, save_ckpt, get_normalizer_from_calculated, plot_episode_result_raw_data, plot_episode_result
-from raw_data_utils import get_frame_num, get_frame_data_fast, get_traj_data, normalize_sparse, normalize_dense
+from utils.data_utils import get_valid_episodes, split_train_eval_episodes, adapt_lerobot_batch_sarm
+from utils.train_utils import set_seed, save_ckpt, get_normalizer_from_calculated, plot_episode_result_raw_data, plot_episode_result
+from utils.raw_data_utils import get_frame_num, get_frame_data_fast, get_traj_data, normalize_sparse, normalize_dense
 from models.subtask_estimator import SubtaskTransformer
 from models.stage_estimator import StageTransformer
 from models.clip_encoder import FrozenCLIPEncoder
-from make_demo_video import produce_video
-from pred_smoother import RegressionConfidenceSmoother
-import torch.nn as nn
-import numpy as np
-import os
+from utils.make_demo_video import produce_video
+from utils.pred_smoother import RegressionConfidenceSmoother
+
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["WANDB_IGNORE_GLOBS"] = "**/rollout/**"
 # os.environ["WANDB_MODE"] = "disabled"
