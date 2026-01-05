@@ -190,7 +190,6 @@ def get_frames_indices_dynamic(idx, n_obs_steps, frame_gap):
 
 @lru_cache(maxsize=64)
 def _get_vr(video_path: str):
-    # CPU decode; switch to decord.gpu(0) if you want GPU decoding later
     return VideoReader(video_path, ctx=cpu(0))
 
 def get_frame_data_fast(path,

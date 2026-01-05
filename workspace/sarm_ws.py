@@ -40,7 +40,6 @@ class SARMWorkspace:
         print(f"[Init] Using device: {self.device}")
         set_seed(cfg.general.seed)
         self.camera_names = cfg.general.camera_names
-        datetime_str = datetime.now().strftime("%Y-%m-%d/%H-%M-%S")
         self.save_dir = Path(f'{cfg.general.project_name}/{cfg.general.task_name}')
         self.save_dir.mkdir(parents=True, exist_ok=True)
         print(f"[Init] Logging & ckpts to: {self.save_dir}")
@@ -148,9 +147,7 @@ class SARMWorkspace:
             # Load checkpoints
             subtask_model_path = reward_model_path / "subtask_best.pt"; stage_model_path = reward_model_path / "stage_best.pt"
             subtask_ckpt = torch.load(subtask_model_path, map_location=self.device); stage_ckpt = torch.load(stage_model_path, map_location=self.device)
-            # Load weights
             subtask_model.load_state_dict(subtask_ckpt["model"]); stage_model.load_state_dict(stage_ckpt["model"])
-            # Move to device
             subtask_model.to(self.device); stage_model.to(self.device)
             subtask_model.train(); stage_model.train()
 
@@ -388,7 +385,6 @@ class SARMWorkspace:
                 print(f"[Eval] Epoch {epoch} Val L1: {val_loss:.6f}")
                 wandb.log({"val/loss": val_loss}, step=step)
 
-            # --- clear memory ---
             torch.cuda.empty_cache()
 
 
@@ -449,8 +445,7 @@ class SARMWorkspace:
         else:
             num_classes = cfg.model.num_classes_dense
 
-
-        # --- subtask_model ---
+        # --- reward_model ---
         subtask_model = SubtaskTransformer(d_model=cfg.model.d_model, 
                                   vis_emb_dim=vis_dim, 
                                   text_emb_dim=txt_dim,
@@ -475,17 +470,14 @@ class SARMWorkspace:
         # Load checkpoints
         subtask_ckpt = torch.load(subtask_model_path, map_location=self.device)
         stage_ckpt = torch.load(stage_model_path, map_location=self.device)
-        # Load weights
         subtask_model.load_state_dict(subtask_ckpt["model"])
         stage_model.load_state_dict(stage_ckpt["model"])
-        # Move to device
         subtask_model.to(self.device)
         stage_model.to(self.device)
         subtask_model.eval(); stage_model.eval()
 
         # save path
-        datetime_str = datetime.now().strftime("%Y.%m.%d-%H.%M.%S")
-        rollout_save_dir =  Path(self.save_dir) / "eval_video"  # convert to Path first
+        rollout_save_dir =  Path(self.save_dir) / "eval_video"
         rollout_save_dir.mkdir(parents=True, exist_ok=True)
         ckpt_name = subtask_model_path.stem; ckpt_note_path = rollout_save_dir / "ckpt_note.txt"
         with open(ckpt_note_path, "w", encoding="utf-8") as f:
@@ -496,7 +488,6 @@ class SARMWorkspace:
 
         for i in range(cfg.eval.run_times):
             ep_index = random.choice([idx for idx in val_eps if idx not in evaled_list])
-            # ep_index = val_eps[i]
             global_idx = val_eps.index(ep_index)
             evaled_list.append(ep_index)
             start_idx = dataset_val.episode_data_index["from"][global_idx].item()
@@ -574,7 +565,8 @@ class SARMWorkspace:
             np.save(Path(save_dir) / "smoothed.npy", np.array(pred_ep_smoothed))
             print(f"[Eval Video] episode_{ep_index} making video...")
             chunk_id = ep_index // 1000
-            middle_video_dir = Path(f"/LEROBOT_LOCAL_DIR/{repo_id}/videos/chunk-{chunk_id:03d}/top_camera-images-rgb")
+            root = Path.home() / ".cache" / "huggingface" / "lerobot" / repo_id # or change to your LEROBOT_LOCAL_DIR
+            middle_video_dir = root / f"videos/chunk-{chunk_id:03d}/top_camera-images-rgb"
             try:
                 produce_video(save_dir=rollout_save_dir, 
                               middle_video=middle_video_dir, 
@@ -606,7 +598,7 @@ class SARMWorkspace:
         else:
             num_classes = cfg.model.num_classes_dense
 
-        # --- subtask_model ---
+        # --- reward_model ---
         subtask_model = SubtaskTransformer(d_model=cfg.model.d_model, 
                                   vis_emb_dim=vis_dim, 
                                   text_emb_dim=txt_dim,
@@ -632,10 +624,8 @@ class SARMWorkspace:
         # Load checkpoints
         subtask_ckpt = torch.load(subtask_model_path, map_location=self.device)
         stage_ckpt = torch.load(stage_model_path, map_location=self.device)
-        # Load weights
         subtask_model.load_state_dict(subtask_ckpt["model"])
         stage_model.load_state_dict(stage_ckpt["model"])
-        # Move to device
         subtask_model.to(self.device)
         stage_model.to(self.device)
         subtask_model.eval(); stage_model.eval()

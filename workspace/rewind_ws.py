@@ -105,14 +105,14 @@ class ReWiNDWorkspace:
         # Schedulers
         reward_warmup_scheduler = LinearLR(
             reward_optimizer,
-            start_factor=1e-6 / cfg.optim.lr,  # or 0.0 for full ramp-up
+            start_factor=1e-6 / cfg.optim.lr,  
             end_factor=1.0,
             total_iters=cfg.optim.warmup_steps
         )
         reward_cosine_scheduler = CosineAnnealingLR(
             reward_optimizer,
-            T_max=cfg.optim.total_steps - cfg.optim.warmup_steps,  # cosine decay after warmup
-            eta_min=0.0  # or set a nonzero final LR if needed
+            T_max=cfg.optim.total_steps - cfg.optim.warmup_steps,  
+            eta_min=0.0
         )
         reward_scheduler = SequentialLR(
             reward_optimizer,
@@ -211,7 +211,6 @@ class ReWiNDWorkspace:
                 print(f"[Eval] Epoch {epoch} Val L1: {val_loss:.6f}")
                 wandb.log({"val/loss": val_loss}, step=step)
 
-            # --- clear memory ---
             torch.cuda.empty_cache()
 
             # --- save checkpoints ---
@@ -269,8 +268,7 @@ class ReWiNDWorkspace:
         reward_model.eval()
 
         # save path
-        datetime_str = datetime.now().strftime("%Y.%m.%d-%H.%M.%S")
-        rollout_save_dir =  Path(self.save_dir) / "eval_video" / f"{datetime_str}"  # convert to Path first
+        rollout_save_dir =  Path(self.save_dir) / "eval_video"
         rollout_save_dir.mkdir(parents=True, exist_ok=True)
         OmegaConf.save(cfg, rollout_save_dir / "config.yaml")
         evaled_list = []
@@ -329,7 +327,8 @@ class ReWiNDWorkspace:
             np.save(Path(save_dir) / "smoothed.npy", np.array(pred_ep_smoothed))
             print(f"[Eval Video] episode_{ep_index} making video...")
             chunk_id = ep_index // 1000
-            middle_video_dir = Path(f"/LEROBOT_LOCAL_DIR/{repo_id}/videos/chunk-{chunk_id:03d}/top_camera-images-rgb")
+            root = Path.home() / ".cache" / "huggingface" / "lerobot" / repo_id # or change to your LEROBOT_LOCAL_DIR
+            middle_video_dir = root / f"videos/chunk-{chunk_id:03d}/top_camera-images-rgb"
             try:
                 produce_video(save_dir=rollout_save_dir, 
                               middle_video=middle_video_dir, 

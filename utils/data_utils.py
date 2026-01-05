@@ -3,23 +3,7 @@ import re
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
 import random
-import torch
 
-def comply_lerobot_batch(batch: dict, camera_names: List[str] = ["top_camera-images-rgb"]) -> dict:
-    """Comply with lerobot dataset batch format."""
-    # convert to diffusion dataset format
-    # this is a hack to make it work with lerobot dataset
-    result =  {
-        "image_frames": {},
-        "targets": batch["targets"],
-        "lengths": batch["lengths"],
-        "tasks": batch["task"],
-    }
-
-    for cam_name in camera_names:
-        result["image_frames"][cam_name] = batch[cam_name]
-
-    return result
 
 def adapt_lerobot_batch_sarm(
     batch: Dict[str, Any],
