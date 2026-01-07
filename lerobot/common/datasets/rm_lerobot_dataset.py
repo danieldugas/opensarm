@@ -25,9 +25,9 @@ class FrameGapLeRobotDataset(LeRobotDataset):
         download_videos: bool = True,
         video_backend: str | None = None,
         image_names: list[str] = ["top_camera-images-rgb"],
-        dense_annotation: bool = False,
         video_eval: bool = False,
         annotation_list: list[str] | None = None,
+        task_name: str = "fold the tshirt",
     ):
         super().__init__(
             repo_id=repo_id,
@@ -47,12 +47,13 @@ class FrameGapLeRobotDataset(LeRobotDataset):
         self.max_rewind_steps = max_rewind_steps
         self.timestamp_tensor = torch.tensor(self.hf_dataset["timestamp"]).flatten()
         assert all(img_name in self.meta.video_keys for img_name in image_names), f"Image names {image_names} not found in metadata video keys."
+        assert 'reward' in self.meta.features, f"'reward' (progress label) not found in dataset features."
         self.wrapped_video_keys = image_names  # Use only the specified camera for videos
         self.verbs = ['move', 'grasp', 'rotate', 'push', 'pull', 'slide', 'lift', 'place']
         self.fake = Faker()
-        self.dense_annotation = dense_annotation
         self.video_eval = video_eval
         self.annotation_list = annotation_list
+        self.task_name = task_name
 
     def get_frame_indices(self, idx: int,
                       n_obs_steps: int,
@@ -102,7 +103,6 @@ class FrameGapLeRobotDataset(LeRobotDataset):
         return frames
 
 
-    # add fixed ep start to sequence
     def __getitem__(self, idx: int) -> dict:
         item = self.hf_dataset[idx]
         ep_idx = item["episode_index"].item()
@@ -178,7 +178,7 @@ class FrameGapLeRobotDataset(LeRobotDataset):
             phrase = [verb] + self.fake.words(nb=num_words)
             seq_item["task"] = " ".join(phrase)
         else:
-            seq_item["task"] = "fold the tshirt"
+            seq_item["task"] = self.task_name
 
         # Progress targets
         seq_item["targets"] = torch.zeros(1 + self.n_obs_steps + self.max_rewind_steps, dtype=torch.float32)
@@ -201,18 +201,6 @@ class FrameGapLeRobotDataset(LeRobotDataset):
         seq_item["state"] = state_with_rewind
         seq_item["lengths"] = torch.tensor(1 + self.n_obs_steps + rewind_step, dtype=torch.int32)
         seq_item["frame_relative_indices"] = frame_relative_indices
-
-        if self.dense_annotation:
-            if pertube_task_flag:
-                seq_item["task"] = [seq_item["task"]] * (1 + self.n_obs_steps + self.max_rewind_steps)
-            else:
-                seq_item["task"] = [''] * (1 + self.n_obs_steps + self.max_rewind_steps)
-                # Five-staged task annotation
-                for i in range(0, 1 + self.n_obs_steps + self.max_rewind_steps):
-                    stage_idx =  int(torch.floor(seq_item["targets"][i]).item())
-                    stage_idx = min(stage_idx, len(self.annotation_list) - 1)
-                    seq_item["task"][i] = self.annotation_list[stage_idx]
-        
 
         del item, video_frames, query_ts_dict, obs_ts_range, progress_list, state_with_rewind, frame_relative_indices
 

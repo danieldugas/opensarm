@@ -56,7 +56,8 @@ class ReWiNDWorkspace:
                                                frame_gap=cfg.model.frame_gap,
                                                max_rewind_steps=cfg.model.max_rewind_steps,
                                                image_names=cfg.general.camera_names,
-                                               annotation_list=cfg.model.annotation_list)
+                                               annotation_list=cfg.model.annotation_list,
+                                               task_name=cfg.general.task_name)
 
         dataset_val = FrameGapLeRobotDataset(repo_id=cfg.general.repo_id, 
                                                episodes=val_eps, 
@@ -64,7 +65,8 @@ class ReWiNDWorkspace:
                                                frame_gap=cfg.model.frame_gap,
                                                max_rewind_steps=cfg.model.max_rewind_steps,
                                                image_names=cfg.general.camera_names,
-                                               annotation_list=cfg.model.annotation_list)
+                                               annotation_list=cfg.model.annotation_list,
+                                               task_name=cfg.general.task_name)
 
         dataloader_train = torch.utils.data.DataLoader(dataset_train, **cfg.dataloader)
         dataloader_val   = torch.utils.data.DataLoader(dataset_val, **cfg.val_dataloader)
@@ -240,6 +242,7 @@ class ReWiNDWorkspace:
                                                max_rewind_steps=cfg.model.max_rewind_steps,
                                                image_names=cfg.general.camera_names,
                                                annotation_list=cfg.model.annotation_list,
+                                               task_name=cfg.general.task_name,
                                                video_eval=True)
         
         state_normalizer = get_normalizer_from_calculated(cfg.general.state_norm_path, self.device)

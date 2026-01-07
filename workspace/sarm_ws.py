@@ -79,7 +79,8 @@ class SARMWorkspace:
                                                frame_gap=cfg.model.frame_gap,
                                                max_rewind_steps=cfg.model.max_rewind_steps,
                                                image_names=cfg.general.camera_names,
-                                               annotation_list=cfg.model.sparse_annotation_list)
+                                               annotation_list=cfg.model.sparse_annotation_list,
+                                               task_name=cfg.general.task_name)
 
         dataset_train_dense = FrameGapLeRobotDataset(repo_id=cfg.general.repo_id_dense, 
                                                episodes=train_eps_dense, 
@@ -87,7 +88,8 @@ class SARMWorkspace:
                                                frame_gap=cfg.model.frame_gap,
                                                max_rewind_steps=cfg.model.max_rewind_steps,
                                                image_names=cfg.general.camera_names,
-                                               annotation_list=cfg.model.dense_annotation_list)
+                                               annotation_list=cfg.model.dense_annotation_list,
+                                               task_name=cfg.general.task_name)
 
         dataset_val_sparse = FrameGapLeRobotDataset(repo_id=cfg.general.repo_id_sparse, 
                                                episodes=val_eps_sparse, 
@@ -95,7 +97,8 @@ class SARMWorkspace:
                                                frame_gap=cfg.model.frame_gap,
                                                max_rewind_steps=cfg.model.max_rewind_steps,
                                                image_names=cfg.general.camera_names,
-                                               annotation_list=cfg.model.sparse_annotation_list)
+                                               annotation_list=cfg.model.sparse_annotation_list,
+                                               task_name=cfg.general.task_name)
         
         dataset_val_dense = FrameGapLeRobotDataset(repo_id=cfg.general.repo_id_dense, 
                                                episodes=val_eps_dense, 
@@ -103,7 +106,8 @@ class SARMWorkspace:
                                                frame_gap=cfg.model.frame_gap,
                                                max_rewind_steps=cfg.model.max_rewind_steps,
                                                image_names=cfg.general.camera_names,
-                                               annotation_list=cfg.model.dense_annotation_list)
+                                               annotation_list=cfg.model.dense_annotation_list,
+                                               task_name=cfg.general.task_name)
 
         dataloader_train_sparse = torch.utils.data.DataLoader(dataset_train_sparse, **cfg.dataloader)
         dataloader_val_sparse   = torch.utils.data.DataLoader(dataset_val_sparse, **cfg.val_dataloader)
@@ -427,6 +431,7 @@ class SARMWorkspace:
                                                max_rewind_steps=cfg.model.max_rewind_steps,
                                                image_names=cfg.general.camera_names,
                                                annotation_list=cfg.model.sparse_annotation_list,
+                                               task_name=cfg.general.task_name,
                                                video_eval=True)
         
         state_normalizer = get_normalizer_from_calculated(cfg.general.state_norm_path, self.device)

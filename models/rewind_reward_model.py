@@ -11,12 +11,10 @@ class RewardTransformer(nn.Module):
                  n_heads: int = 8,
                  dropout: float = 0.1,
                  num_cameras: int = 1,
-                 dense_annotation: bool = False
                  ):
         super().__init__()
         self.d_model = d_model
         self.num_cameras = num_cameras
-        self.dense_annotation = dense_annotation
 
         # Projection layers
         self.lang_proj = nn.Linear(text_emb_dim, d_model)
@@ -55,11 +53,9 @@ class RewardTransformer(nn.Module):
         state_proj = self.state_proj(state).unsqueeze(1)               # (B, 1, T, d_model)
 
         # Project language and expand
-        if self.dense_annotation:
-            lang_proj = self.lang_proj(lang_emb).unsqueeze(1)  # (B, 1, T, d_model)
-        else:
-            lang_proj = self.lang_proj(lang_emb).unsqueeze(1).unsqueeze(2)  # (B, 1, 1, d_model)
-            lang_proj = lang_proj.expand(B, 1, T, D)                        # (B, 1, T, d_model)
+        lang_proj = self.lang_proj(lang_emb).unsqueeze(1).unsqueeze(2)  # (B, 1, 1, d_model)
+        lang_proj = lang_proj.expand(B, 1, T, D)                        # (B, 1, T, d_model)
+        
         # Concatenate along time dimension
         x = torch.cat([vis_proj, lang_proj, state_proj], dim=1)              # (B, N+2, T, d_model)
 

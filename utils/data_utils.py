@@ -44,7 +44,6 @@ def adapt_lerobot_batch_rewind(
     Args:
         batch: Input batch dictionary.
         camera_names: List of camera keys to include.
-        dense_annotation: Whether to transpose task annotations.
         eval_video: If True, wrap tensors with an additional batch dimension.
     """
     def maybe_unsqueeze(x):
