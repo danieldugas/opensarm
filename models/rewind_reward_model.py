@@ -25,7 +25,7 @@ class RewardTransformer(nn.Module):
         enc_layer = nn.TransformerEncoderLayer(d_model, n_heads, 4 * d_model, dropout, batch_first=True)
         self.transformer = nn.TransformerEncoder(enc_layer, n_layers)
 
-        # Positional bias only for first visual frame (to avoid leaking absolute time)
+        # Positional bias only for first visual frame
         self.first_pos = nn.Parameter(torch.zeros(1, d_model))
 
         # Fusion MLP
@@ -47,20 +47,20 @@ class RewardTransformer(nn.Module):
         device = img_seq.device
 
         # Project vision
-        vis_proj = self.visual_proj(img_seq)                      # (B, N, T, d_model)
+        vis_proj = self.visual_proj(img_seq)                            # (B, N, T, d_model)
 
         # Project state
-        state_proj = self.state_proj(state).unsqueeze(1)               # (B, 1, T, d_model)
+        state_proj = self.state_proj(state).unsqueeze(1)                # (B, 1, T, d_model)
 
         # Project language and expand
         lang_proj = self.lang_proj(lang_emb).unsqueeze(1).unsqueeze(2)  # (B, 1, 1, d_model)
         lang_proj = lang_proj.expand(B, 1, T, D)                        # (B, 1, T, d_model)
         
         # Concatenate along time dimension
-        x = torch.cat([vis_proj, lang_proj, state_proj], dim=1)              # (B, N+2, T, d_model)
+        x = torch.cat([vis_proj, lang_proj, state_proj], dim=1)         # (B, N+2, T, d_model)
 
         # Add first_pos to camera’s first frame
-        x[:, :N, 0, :] += self.first_pos                          # (B, N+2, T, d_model)
+        x[:, :N, 0, :] += self.first_pos                                # (B, N+2, T, d_model)
 
         # Reshape for transformer: (B, N*(T+1), d_model)
         x_tokens = x.view(B, (N + 2) * T, D)
@@ -68,21 +68,18 @@ class RewardTransformer(nn.Module):
 
         # Build transformer mask
         base_mask = torch.arange(T, device=device).expand(B, T) >= lengths.unsqueeze(1)  # (B, T)
-        mask = base_mask.unsqueeze(1).expand(B, N + 2, T).reshape(B, (N + 2) * T)  # (B, (N+2)*T)
+        mask = base_mask.unsqueeze(1).expand(B, N + 2, T).reshape(B, (N + 2) * T)        # (B, (N+2)*T)
         causal_mask = torch.triu(
             torch.ones(L, L, device=device, dtype=torch.bool),
             diagonal=1
         )  # (L, L)
         
         # Apply transformer
-        h = self.transformer(x, src_key_padding_mask=mask)        # (B, (N+2)*T, d_model)
-
-        # Reshape to (B, N, T+1, d_model)
         h = self.transformer(x_tokens, 
                              mask=causal_mask,
                              src_key_padding_mask=mask,
-                             is_causal=True)  # (B, (N+2)*T, D)
-        flatterned_h = h.view(B, T, -1)  # (B, T, (N+2)*d_model)
-        r = self.fusion_net(flatterned_h).squeeze(-1)  # (B, T, 1)
+                             is_causal=True)                             # (B, (N+2)*T, D)
+        flatterned_h = h.view(B, T, -1)                                  # (B, T, (N+2)*d_model)
+        r = self.fusion_net(flatterned_h).squeeze(-1)                    # (B, T, 1)
         r = torch.sigmoid(r)  # Ensure output is in [0, 1] range
         return r

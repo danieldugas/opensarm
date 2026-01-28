@@ -75,7 +75,7 @@ class SubtaskTransformer(nn.Module):
                 lang_emb: torch.Tensor,     # (B, E) or (B, T, E)
                 state: torch.Tensor,        # (B, T, state_dim)
                 lengths: torch.Tensor,      # (B,)
-                stage_prior: torch.Tensor, # (B,1,T,C) one-hot (from gen_stage_emb)
+                stage_prior: torch.Tensor,  # (B,1,T,C) one-hot (from gen_stage_emb)
                 scheme: str = "sparse"      # "sparse" or "dense"
                 ) -> torch.Tensor:
         assert scheme in self.heads, f"Unknown scheme '{scheme}'. Use one of {list(self.heads.keys())}."
@@ -107,11 +107,11 @@ class SubtaskTransformer(nn.Module):
         h = self.transformer(x_tokens, 
                              mask=causal_mask,
                              src_key_padding_mask=mask,
-                             is_causal=True)  # (B, (N+3)*T, D)         # (B,(N+3)*T,D)
+                             is_causal=True)                            # (B, (N+3)*T, D)         
         h = h.view(B, N + 3, T, D)
         h_flat = h.view(B, T, (N + 3) * D)
         fused = self.fusion_backbone(h_flat)                            # (B,T,D)
 
-        # Scheme-specific regression head → (B, T, 1) → sigmoid
+        # Scheme-specific regression head
         r = torch.sigmoid(self.heads[scheme](fused)).squeeze(-1)        # (B, T)
         return r
