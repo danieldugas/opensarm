@@ -47,7 +47,8 @@ class FrameGapLeRobotDataset(LeRobotDataset):
         self.max_rewind_steps = max_rewind_steps
         self.timestamp_tensor = torch.tensor(self.hf_dataset["timestamp"]).flatten()
         assert all(img_name in self.meta.video_keys for img_name in image_names), f"Image names {image_names} not found in metadata video keys."
-        assert 'reward' in self.meta.features, f"'reward' (progress label) not found in dataset features."
+        if "reward" not in self.meta.features:
+            print(f"Warning: 'reward' (progress label) not found in dataset features. Progress labels will be dummy values.")
         self.wrapped_video_keys = image_names  # Use only the specified camera for videos
         self.verbs = ['move', 'grasp', 'rotate', 'push', 'pull', 'slide', 'lift', 'place']
         self.fake = Faker()
@@ -119,14 +120,20 @@ class FrameGapLeRobotDataset(LeRobotDataset):
         obs_indices = self.get_frame_indices(idx, self.n_obs_steps, self.frame_gap, ep_start, ep_end)
         sequence = self.hf_dataset.select(obs_indices)
 
-        # Extract sequence data
         seq_item = {}
+
+        # manually add progress if it doesn't exist
+        progress_list = (torch.tensor(obs_indices) - ep_start) / (ep_end - ep_start + 1)
+        # print(progress_list)
+
+        # Extract sequence data
         for key in sequence.features:
             value = sequence[key]
             if key == "actions":
                 seq_item[key] = torch.stack(value)
-            elif key == "state":
-                seq_item[key] = torch.stack(value)
+            elif key == "observation.state":
+                # seq_item[key] = torch.stack(value)
+                seq_item[key] = torch.zeros((len(value), 14), dtype=torch.float32)
             elif key == "reward":
                 progress_list = torch.stack(value).squeeze(-1)
             else:
@@ -182,8 +189,8 @@ class FrameGapLeRobotDataset(LeRobotDataset):
 
         # Progress targets
         seq_item["targets"] = torch.zeros(1 + self.n_obs_steps + self.max_rewind_steps, dtype=torch.float32)
-        state_with_rewind = torch.zeros([1 + self.n_obs_steps + self.max_rewind_steps, seq_item["state"].shape[-1]], dtype=torch.float32)
-        state_with_rewind[:self.n_obs_steps + 1, :] = seq_item["state"]
+        state_with_rewind = torch.zeros([1 + self.n_obs_steps + self.max_rewind_steps, seq_item["observation.state"].shape[-1]], dtype=torch.float32)
+        state_with_rewind[:self.n_obs_steps + 1, :] = seq_item["observation.state"]
         frame_relative_indices = torch.zeros(1 + self.n_obs_steps + self.max_rewind_steps, dtype=torch.float32)
 
         if not pertube_task_flag:
@@ -196,7 +203,7 @@ class FrameGapLeRobotDataset(LeRobotDataset):
         
         for i in range(rewind_step):
             frame_relative_indices[1 + self.n_obs_steps + i] = torch.flip(frame_relative_indices[:self.n_obs_steps + 1], dims=[0])[i + 1]
-            state_with_rewind[1 + self.n_obs_steps + i, :] = torch.flip(seq_item["state"], dims=[0])[i + 1]
+            state_with_rewind[1 + self.n_obs_steps + i, :] = torch.flip(seq_item["observation.state"], dims=[0])[i + 1]
         
         seq_item["state"] = state_with_rewind
         seq_item["lengths"] = torch.tensor(1 + self.n_obs_steps + rewind_step, dtype=torch.int32)

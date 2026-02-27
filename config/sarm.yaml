@@ -5,10 +5,10 @@ cfg:
     # dataset specific
     project_name: "reward_sarm"
     task_name: "fold_tshirt"
-    repo_id_sparse: PATH_TO_YOUR/SPARSE_LEROBOT_DATASET"  # path to the huggingface lerobot dataset: USR_NAME/DATASET
-    repo_id_dense: PATH_TO_YOUR/DENSE_LEROBOT_DATASET"    # path to the huggingface lerobot dataset: USR_NAME/DATASET
-    state_norm_path: PATH_TO_YOUR/NORM_STATS # path to the task specific norm stats file, example can be found at "assets/fold_tshirt.json"
-    camera_names:  [top_camera-images-rgb]
+    repo_id_sparse: danieldugas/tangible_pillow_train  # path to the huggingface lerobot dataset: USR_NAME/DATASET
+    repo_id_dense: danieldugas/tangible_pillow_train    # path to the huggingface lerobot dataset: USR_NAME/DATASET
+    state_norm_path: /home/dud/Code/assets/pi05_pillow/danieldugas/tangible_pillow_train/norm_stats.json # path to the task specific norm stats file, example can be found at "assets/fold_tshirt.json"
+    camera_names:  [observation.images.head]
     seed: 42
     device: "cuda" 
 
@@ -47,31 +47,42 @@ cfg:
     max_rewind_steps: 4
     frame_gap: 30
     state_dim: 14
-    no_state: False
+    no_state: True
     resume_training: False
     model_path: ""
 
-    # Sparse anno
-    num_classes_sparse: 6 # num_classes = num_stage
+    # # Sparse anno
+    # num_classes_sparse: 6 # num_classes = num_stage
+    # sparse_annotation_list: [
+    #         "grab crumpled tshirt from pile", 
+    #         "move the tshirt to center",
+    #         "Flatten the tshirt out",
+    #         "Fold the tshirt",
+    #         "Neatly place the folded tshirt to the corner",
+    # ]
+
+    # # Dense anno
+    # num_classes_dense: 9 # num_classes = num_stage
+    # dense_annotation_list: [
+    #     "grab crumpled tshirt and move to center",
+    #     "flatten out the tshirt",
+    #     "grab near side and fold one-third",
+    #     "grab far side and fold into rectangle",
+    #     "rotate the tshirt 90 degrees",
+    #     "grab bottom and fold one-third",
+    #     "grab two-third side and fold into square",
+    #     "put folded tshirt into corner"
+    # ]
+
+    num_classes_sparse: 1 # num_classes = num_stage
     sparse_annotation_list: [
-            "grab crumpled tshirt from pile", 
-            "move the tshirt to center",
-            "Flatten the tshirt out",
-            "Fold the tshirt",
-            "Neatly place the folded tshirt to the corner",
+        "Take the pillow out of the pillowcase",
     ]
 
     # Dense anno
-    num_classes_dense: 9 # num_classes = num_stage
+    num_classes_dense: 1 # num_classes = num_stage
     dense_annotation_list: [
-        "grab crumpled tshirt and move to center",
-        "flatten out the tshirt",
-        "grab near side and fold one-third",
-        "grab far side and fold into rectangle",
-        "rotate the tshirt 90 degrees",
-        "grab bottom and fold one-third",
-        "grab two-third side and fold into square",
-        "put folded tshirt into corner"
+        "Take the pillow out of the pillowcase",
     ]
 
   optim:

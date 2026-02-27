@@ -62,9 +62,9 @@ class SARMWorkspace:
         OmegaConf.save(cfg, self.save_dir / "config.yaml")
         # --- wandb ---
         wandb.init(
-            project=f'{cfg.general.project_name}-{cfg.general.task_name}',
+            # project=f'{cfg.general.project_name}-{cfg.general.task_name}',
             name=f'{datetime.now().strftime("%Y.%m.%d-%H.%M.%S")}',
-            config=cfg,
+            # config=cfg,
         )
 
         # --- data ---
@@ -239,7 +239,11 @@ class SARMWorkspace:
                 num_classes = cfg.model.num_classes_sparse
             else:
                 num_classes = cfg.model.num_classes_dense
-            
+            if gt_stage.max() >= num_classes or gt_stage.min() < 0:
+                print(f"Warning: gt_stage has values outside the valid range [0, {num_classes-1}]. Clamping them.")
+                print(f"Info: trg: {trg}, lens: {lens}, gt_stage: {gt_stage}")  # Debug info
+            gt_stage = gt_stage.clamp(0, num_classes - 1)
+
             if torch.rand(1).item() < 0.5:
                 # Mode 1: ground truth trg -> one-hot
                 stage_emb = self.gen_stage_emb(num_classes, trg)                              # (B, 1, T, C)
@@ -312,8 +316,17 @@ class SARMWorkspace:
                 subtask_pred = subtask_model(img_emb, lang_emb, state, lens, stage_emb)
                 
                 if anno_type == "sparse":
+                    num_classes = cfg.model.num_classes_sparse
+                else:
+                    num_classes = cfg.model.num_classes_dense
+                if gt_stage.max() >= num_classes or gt_stage.min() < 0:
+                    print(f"Warning: gt_stage has values outside the valid range [0, {num_classes-1}]. Clamping them.")
+                    print(f"Info: trg: {trg}, lens: {lens}, gt_stage: {gt_stage}")  # Debug info
+                gt_stage = gt_stage.clamp(0, num_classes - 1)
+
+                if anno_type == "sparse":
                     stage_loss = F.cross_entropy(stage_pred.view(-1, cfg.model.num_classes_sparse), gt_stage.view(-1), reduction="mean")
-                else: 
+                else:
                     stage_loss = F.cross_entropy(stage_pred.view(-1, cfg.model.num_classes_dense), gt_stage.view(-1), reduction="mean")
                 subtask_loss = F.mse_loss(subtask_pred, gt_sub_reward, reduction="mean")
 
